@@ -293,6 +293,10 @@ ns4chain.rpcData = function( obj ){
 		sys.console({level: 'debug', text: sprintf('chainData.value is not defined or not JSON string (file: %s, line: %s)',__file,__line)});
 	    }
 	}else if( res.rpc == 'emercoin'){
+	    //chainData.value = '~#A=192.168.0.123,127.0.0.1#AAAA=2607:f8b0:4004:806::1001#NS=ns1.google.com#TTL=4001';
+	    //chainData.value = 'A=1.2.3.4|SD=www,gopher|NS=ns.example.com';
+	    //chainData.value = 'A=1.2.3.4|SD=www,gopher|TTL=4001|TXT=aaaaaaaaa|AAAA=2607:f8b0:4004:806::1001|CNAME=google.ru';
+	    //chainData.value = 'A=1.2.3.4|SD=www,gopher';
 	    zoneData[fqdn] = {};
 	    var regexp = /^~(\S)/gi;
 	    var match = regexp.exec(chainData.value);
