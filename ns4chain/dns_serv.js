@@ -34,7 +34,7 @@ dnsSource = require('native-dns');		//https://github.com/tjfontaine/node-dns
 inSubnet = require('insubnet');			//https://www.npmjs.com/package/insubnet
 
 config = require('./dns_serv_options');
-config.version = '0.9.0';
+config.version = '0.9.1';
 sys = require('./dns_func');
 
 zoneData = {};
@@ -128,7 +128,7 @@ dns.on('request', function (request, response) {
 	}
 
 	if (!sys.is_null(sys.in_array(domain,antiddoslist)) && !sys.is_null(antiddoslist.length)){
-	    sys.console({level: 'debug', text: sprintf('Domain %s is in ddos list (file: %s, line: %s)',__file,__line)});
+	    sys.console({level: 'debug', text: sprintf('Domain %s is in ddos list (file: %s, line: %s)',domain,__file,__line)});
 	    error = 'REFUSED';
 	}
 
