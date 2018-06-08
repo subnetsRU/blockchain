@@ -34,7 +34,7 @@ dnsSource = require('native-dns');		//https://github.com/tjfontaine/node-dns
 inSubnet = require('insubnet');			//https://www.npmjs.com/package/insubnet
 
 config = require('./dns_serv_options');
-config.version = '0.9.1';
+config.version = '0.9.2';
 sys = require('./dns_func');
 
 zoneData = {};

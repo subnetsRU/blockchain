@@ -602,6 +602,10 @@ ns4chain.resolv.namecoin = function( obj ){
 	}
 
 	if (!sys.is_null(zoneData[host].ns)){		//If NS servers is set ignore chain data and send request to NS
+		if (typeof zoneData[host].ns == 'string'){
+		    zoneData[host].ns = [ zoneData[host].ns ] ;
+		}
+
 		obj.res.response.header.aa = 0;		//Non-authoritative answer
 //TODO: NS IPv6 support
 		sys.console({level: 'debug', text: sprintf('Found NS servers [%s] for %s (file: %s, line: %s)',zoneData[host].ns.join(', '),host,__file,__line)});
@@ -950,9 +954,11 @@ ns4chain.resolv.emercoin = function( obj ){
 		obj.res.error=sprintf('ns4chain.resolv: %s record for [%s] not found (file: %s, line: %s)',obj.res.type,host,__file,__line);
 	    }
 	}
-
-
     }else if (sys.is_null(obj.res.error) && !sys.is_null(zoneData[host].ns)){
+	    if (typeof zoneData[host].ns == 'string'){
+		zoneData[host].ns = [ zoneData[host].ns ] ;
+	    }
+
 	    obj.res.response.header.aa = 0;		//Non-authoritative answer
 //TODO: resolv ns name to A|AAAA
 	    if (/^NS$/.test(obj.res.type)){
