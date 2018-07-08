@@ -42,7 +42,15 @@ $chain = array(
 	'RPC_PASS' => 'password',
 	'RPC_HOST' => '127.0.0.1',
 	'RPC_PORT' => 6662,
-	'RPC_TIMEOUT' => 10 
-    )
+	'RPC_TIMEOUT' => 10,
+    ),
+    'sixeleven' => array(
+	'RPC_USER' => 'username',
+	'RPC_PASS' => 'password',
+	'RPC_HOST' => '127.0.0.1',
+	'RPC_PORT' => 8332,
+	'RPC_TIMEOUT' => 10,
+    ),
 );
+
 ?>

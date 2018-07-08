@@ -1,5 +1,19 @@
 /*
-    ns4chain configuration file :: https://github.com/subnetsRU/namecoin
+    ns4chain configuration file :: https://github.com/subnetsRU/blockchain/tree/master/ns4chain
+
+    DNS service for blockchain TLDs
+    =================================
+	Namecoin (https://namecoin.org/):
+	    bit (https://forum.namecoin.org/viewtopic.php?f=11&t=2654)
+
+	Emercoin (https://emercoin.com/):
+	    coin
+	    emc
+	    lib
+	    bazar
+
+	Sixlevel (https://611project.org/):
+	    *.611.to
 
     (c) 2017-2018 SUBNETS.RU for bitname.ru project (Moscow, Russia)
     Authors: Nikolaev Dmitry <virus@subnets.ru>, Panfilov Alexey <lehis@subnets.ru>
@@ -24,6 +38,13 @@ module.exports = {
 	    enabled: true,		//values: true or false
 	    host: '127.0.0.1',
 	    port: 6662,
+	    user: 'rpc_username_from_emercoin.conf',
+	    pass: 'rpc_password_from_emercoin.conf'
+	},
+	sixeleven: {
+	    enabled: true,		//values: true or false
+	    host: '127.0.0.1',
+	    port: 8332,
 	    user: 'rpc_username_from_emercoin.conf',
 	    pass: 'rpc_password_from_emercoin.conf'
 	}

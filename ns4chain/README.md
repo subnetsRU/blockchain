@@ -1,13 +1,19 @@
 DNS server on NodeJS for blockchain domains
 =================
-[Namecoin](http://www.namecoin.org/) and [Emercoin](https://emercoin.com/)
+[Namecoin](https://www.namecoin.org/) 
 
-Supported domains:
 * .bit
+
+[Emercoin](https://emercoin.com/)
+
 * .emc
 * .coin
 * .lib
 * .bazar
+
+[SixEleven](https://611project.org/) 
+
+* .611.to
 
 Install instructions
 --------------------

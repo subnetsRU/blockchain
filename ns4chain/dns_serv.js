@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
-    ns4chain server :: https://github.com/subnetsRU/namecoin
+    ns4chain server :: https://github.com/subnetsRU/blockchain/tree/master/ns4chain
 
     (c) 2017-2018 SUBNETS.RU for bitname.ru project (Moscow, Russia)
     Authors: Nikolaev Dmitry <virus@subnets.ru>, Panfilov Alexey <lehis@subnets.ru>
@@ -34,7 +34,7 @@ dnsSource = require('native-dns');		//https://github.com/tjfontaine/node-dns
 inSubnet = require('insubnet');			//https://www.npmjs.com/package/insubnet
 
 config = require('./dns_serv_options');
-config.version = '0.9.2';
+config.version = '0.10.0';
 sys = require('./dns_func');
 
 zoneData = {};
@@ -122,7 +122,8 @@ dns.on('request', function (request, response) {
 
 	if (sys.is_null(config.recursion) || sys.is_null(config.recursion.enabled)){
 	    //for rcode see node_modules/native-dns-packet/consts.js -> NAME_TO_RCODE
-	    if (!(/\.(bit|emc|coin|lib|bazar)$/.test(domain))){
+	    if (!(/\.(bit|emc|coin|lib|bazar|to)$/.test(domain))){
+		sys.console({level: 'info', text: sprintf('recursion is disabled by config (file: %s, line: %s)',__file,__line)});
 		error = 'REFUSED';
 	    }
 	}
@@ -134,7 +135,7 @@ dns.on('request', function (request, response) {
 
 	if (sys.is_null(error)){
 	    var re;
-	    if (!(/\.(bit|emc|coin|lib|bazar)$/.test(domain))){
+	    if (!(/\.(bit|emc|coin|lib|bazar|to)$/.test(domain))){
 		recursion = true;
 
 		if ((/^SRV$/.test(type))){
@@ -143,6 +144,7 @@ dns.on('request', function (request, response) {
 		    re = new RegExp('^([a-z0-9]+\.)?[a-z0-9][a-z0-9-]*\.[a-z]{2,10}$','i');
 		}
 		if (sys.is_null(domain.match(re))){
+		    sys.console({level: 'debug', text: sprintf('Domain name %s not match regexp (file: %s, line: %s)',domain,__file,__line)});
 		    error = 'NOTFOUND';
 		}
 
@@ -170,10 +172,15 @@ dns.on('request', function (request, response) {
 		    error = 'NOTIMP';
 		}else{
 		    if ((/^SRV$/.test(type)) && (!(/^_[a-z]+\._(tcp|udp)\./.test(domain)))){
+			sys.console({level: 'debug', text: sprintf('Domain name %s SRV not match regexp (file: %s, line: %s)',domain,__file,__line)});
 			error = 'NOTFOUND';
 		    }
 		}
 		if (sys.is_null(error)){
+		    if ((/\.611\.to$/.test(domain))){
+			domain = domain.replace(/\.to$/,'');
+		    }
+
 		    var tmpName = domain.split('.');
 		    var name = tmpName[0];
 		    var zone = tmpName[tmpName.length-1];
@@ -197,6 +204,7 @@ dns.on('request', function (request, response) {
 		}
 		//https://wiki.namecoin.info/index.php?title=Domain_Name_Specification#Regular_Expression
 		if (!(/^[a-z]([a-z0-9-]{0,62}[a-z0-9])?$/.test(name))){
+		    sys.console({level: 'debug', text: sprintf('Domain name %s not match regexp (file: %s, line: %s)',domain,__file,__line)});
 		    error = 'NOTFOUND';
 		}
 	    }
@@ -208,6 +216,14 @@ dns.on('request', function (request, response) {
 	    response.send();
 	}else{
 	    if (sys.is_null(recursion)){
+		rpcName = '';
+		if (zone == 'bit'){
+		    rpcName = 'namecoin';
+		}else if( /(emc|coin|lib|bazar)$/.test(domain) ){
+		    rpcName = 'emercoin';
+		}else if (zone == 611){
+		    rpcName = 'sixeleven';
+		}
 		ns4chain.request({
 		    response: response,
 		    domain: domain,
@@ -216,7 +232,7 @@ dns.on('request', function (request, response) {
 		    zone: zone,
 		    subDomain: subDomain,
 		    sld: name + '.' + zone,
-		    rpc: (zone == 'bit' ? 'namecoin' : 'emercoin'),
+		    rpc: rpcName,
 		    service: service,
 		    class: (!sys.is_null(request.question[0].class) ? request.question[0].class : 1),
 		});

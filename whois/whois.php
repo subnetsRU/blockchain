@@ -1,15 +1,22 @@
 #!/usr/local/bin/php
 <?php
 /*
-    Whois service for blockchain TLDs:
-	Namecoin:
-	    * bit (https://forum.namecoin.org/viewtopic.php?f=11&t=2654)
-	Emercoin:
-	    * coin
-	    * emc
-	    * lib
-	    * bazar
+    Whois service for blockchain TLDs
+    =================================
+	Namecoin (https://namecoin.org/):
+	    bit (https://forum.namecoin.org/viewtopic.php?f=11&t=2654)
 
+	Emercoin (https://emercoin.com/):
+	    coin
+	    emc
+	    lib
+	    bazar
+
+	Sixlevel (https://611project.org/):
+	    *.611.to
+
+    --------------------------------------------------------------------------------
+    
     (c) 2017-2018 SUBNETS.RU for bitname.ru project (Moscow, Russia)
     Authors: Panfilov Alexey <lehis@subnets.ru>, Nikolaev Dmitry <virus@subnets.ru> 
 
@@ -35,7 +42,7 @@
  SUCH DAMAGE.
 */
 
-define( 'whoisVersion', '0.2.0' );
+define( 'whoisVersion', '0.3.0' );
 
 $config = init();
 
@@ -136,7 +143,7 @@ if( isset( $tmp ) ){
 		    if( isset( $info['txid'] ) && $status == "registered"){
 			print_info( $info['txid'], 'txid' );
 			unset( $data );
-			$request = $chain['config'] + array('method'=> "getrawtransaction", 'txid'=> $info['txid']);
+			$request = $chain['config'] + array('chain' => $chain['chain'], 'method'=> "getrawtransaction", 'txid'=> $info['txid']);
 			$data = rpc_request( $request );
 			if( !isset($data['error']) ){
 			    if( isset( $data['result'] ) && isset( $data['result']['time'] ) ){
@@ -204,6 +211,93 @@ if( isset( $tmp ) ){
 		    
 		    if (isset($info['time'])){
 			print_info( gmdate("Y-m-d\TH:i:s\Z", $info['time'] ), "created" );
+		    }
+		}elseif ($chain['chain'] == "sixeleven"){
+		    if( isset( $info['name'] ) ){
+			print_info( $info['name'], 'name' );
+		    }
+
+		    $status = "registered";
+		    if( isset( $info['expired'] ) ){
+			if ($info['expired'] === true || (int)$info['expired'] == 1){
+			    $status = "expired";
+			}else{
+			    $status = "registered";
+			}
+		    }
+		    if( isset( $info['expires_in'] ) ){
+			print_info( sprintf( "%s blocks",$info['expires_in'] ), 'expires in' );
+			if ((int)$info['expires_in'] < 0 && $status == "registered"){
+			    $status = "expired";
+			}
+		    }
+		    print_info( $status, 'status' );
+
+		    if( isset( $info['value'] ) ){
+			$value = @json_decode(trim(preg_replace("/:\"\[/",":[",preg_replace("/\"\]\"/","\"]",$info['value']))),true,512);
+			$json_last_error = json_last_error();
+			if ($value && !$json_last_error && is_array($value)){
+			    if (isset($value['email'])){
+				print_info( $value['email'], 'email' );
+			    }
+			    if (isset($value['a'])){
+				print_info( $value['a'], 'admin-c' );
+			    }
+			    if (isset($value['t'])){
+				print_info( $value['t'], 'tech-c' );
+			    }
+			    if (isset($value['r'])){
+				print_info( $value['r'], 'registrant' );
+			    }
+			    if (isset($value['rr'])){
+				print_info( $value['rr'], 'sponsoring registrar' );
+			    }
+			    if (isset($value['info'])){
+				print_info( $value['info'], 'info' );
+			    }
+			    if (isset($value['loc'])){
+				print_info( $value['loc'], 'geo loc' );
+			    }
+			    if (isset($value['tor'])){
+				print_info( $value['tor'], 'tor' );
+			    }
+			    if (isset($value['ns'])){
+				print_info( $value['ns'], 'nameserver' );
+			    }
+			}else{
+			    if (preg_match("/^\{.*\}$/",$info['value'])){
+				$info['value']="Error: Data decode failed";
+				if ( DEBUG ){
+				    $info['value'] .= sprintf(". Code %d (%s)",$json_last_error,json_last_error_msg());
+				}
+			    }
+			    print_info( $info['value'], 'info' );
+			}
+		    }
+		
+		    if( isset( $info['address'] ) ){
+			print_info( $info['address'], 'address' );
+		    }
+		    if( isset( $info['height'] ) ){
+			print_info( $info['height'], 'height' );
+		    }
+
+		    if( isset( $info['txid'] ) && $status == "registered"){
+			print_info( $info['txid'], 'txid' );
+			unset( $data );
+			$request = $chain['config'] + array('chain' => $chain['chain'], 'method'=> "getrawtransaction", 'txid'=> $info['txid']);
+			$data = rpc_request( $request );
+			if( !isset($data['error']) ){
+			    if( isset( $data['result'] ) && isset( $data['result']['time'] ) ){
+				print "\n";
+				print_info( gmdate("Y-m-d\TH:i:s\Z", $data['result']['time'] ), "last update on" );
+			    }
+			}else{
+			    if ( DEBUG ){
+				print "\n";
+				print_info( implode("; ",$data['error']), "last update on" );
+			    }
+			}
 		    }
 		}else{
 		    print "% Unknown chain\n";
@@ -311,13 +405,18 @@ function rpc_request( $p = array() ){
 		$request['params'] = array( sprintf("d/%s",trim($p['domain'])) );
 	    }elseif (isset($p['chain']) && $p['chain'] == "emercoin"){
 		$request['params'] = array( sprintf("dns:%s",trim($p['domain'])) );
+	    }elseif (isset($p['chain']) && $p['chain'] == "sixeleven"){
+		$request['params'] = array( sprintf("d/%s",trim($p['domain'])) );
 	    }else{
 		$request['params'] = array( trim($p['domain']) );
 	    }
 	}elseif( $p['method'] == "getrawtransaction"){
-	    $request['params'] = array( trim($p['txid']), true );
+	    if (isset($p['chain']) && $p['chain'] == "sixeleven"){
+		$request['params'] = array( trim($p['txid']), 1 );
+	    }else{
+		$request['params'] = array( trim($p['txid']), true );
+	    }
 	}
-
 	$data = @json_encode( $request );
 	$curl = curl_init();
 	curl_setopt( $curl, CURLOPT_URL, sprintf("http://%s:%d",$p['RPC_HOST'],$p['RPC_PORT']) );
@@ -340,12 +439,19 @@ function rpc_request( $p = array() ){
 	$curlAnswer = curl_exec( $curl );
 	$httpCode = (int)curl_getinfo( $curl, CURLINFO_HTTP_CODE );
 	$curlCode = curl_errno( $curl );
-
 	if ( $curlCode ){
 	    $err[]=sprintf("RPC connection error code %d %s%s",$curlCode,curl_error( $curl ),DEBUG ? sprintf(" (file: %s, function: %s, line: %s)",__FILE__,__FUNCTION__,__LINE__) : "");
 	}else{
-	    if ($httpCode == 401){
+	    if ($httpCode === 401){
 		$err[]=sprintf("RPC request return %d Unauthorized%s",$httpCode,DEBUG ? sprintf(" (file: %s, function: %s, line: %s)",__FILE__,__FUNCTION__,__LINE__) : "");
+	    }elseif ($httpCode === 403){
+		$err[]=sprintf("RPC request return %d Forbidden%s",$httpCode,DEBUG ? sprintf(" (file: %s, function: %s, line: %s)",__FILE__,__FUNCTION__,__LINE__) : "");
+	    }elseif ($httpCode !== 200){
+		$descr = "";
+		if( $curlAnswer && ( $data = @json_decode( $curlAnswer, true ) ) !== null ){
+		    $descr=sprintf("RPC error code: %s Description: %s",isset($data['error']['code']) ? $data['error']['code'] : "unknown" , isset( $data['error']['message'] ) ? preg_replace( '/d\//', '', $data['error']['message'] ) : "none");
+		}
+		$err[]=sprintf("RPC request return code %d %s %s",$httpCode,$descr,DEBUG ? sprintf(" (file: %s, function: %s, line: %s)",__FILE__,__FUNCTION__,__LINE__) : "");
 	    }
 	    if ( count($err) == 0){
 		if ( !$curlAnswer ){
@@ -358,7 +464,7 @@ function rpc_request( $p = array() ){
 		if( ( $data = @json_decode( $curlAnswer, true ) ) !== null ){
 		    if( isset( $data['error'] ) ){
 			if ( isset($data['error']['code']) && $data['error']['code'] == "-4"){
-			    if (isset($p['chain']) && $p['chain'] == "namecoin"){
+			    if (isset($p['chain']) && ($p['chain'] == "namecoin" || $p['chain'] == "sixeleven") ){
 				$ret['notfound'] = preg_replace( '/d\//', '', isset( $data['error']['message'] ) ? preg_replace( '/d\//', '', $data['error']['message'] ) : "" );
 			    }elseif (isset($p['chain']) && $p['chain'] == "emercoin"){
 				$ret['notfound'] = isset( $data['error']['message'] ) ? $data['error']['message'].", name not found" : "";
@@ -444,6 +550,15 @@ function select_chain( $domain = ""){
 	    if( preg_match( '/^([a-z0-9-]{0,62}[a-z0-9])?$/', $name ) ){
 		$ret['domain'] = $domain;
 		$ret['chain'] = 'emercoin';
+		$ret['config'] = isset($config[$ret['chain']]) ? $config[$ret['chain']] : array();
+	    }else{
+		$err[]=sprintf("%% wrong format of domain name %s%s", $domain,DEBUG ? sprintf(" (file: %s, function: %s, line: %s)",__FILE__,__FUNCTION__,__LINE__) : "");
+	    }
+	}elseif (preg_match("/(\S+)\.611\.to$/",$domain,$m)){
+		$name = $m[1];
+	    if( preg_match( '/^[a-z]([a-z0-9-]{0,62}[a-z0-9])?$/', $name ) ){
+		$ret['domain'] = $name;
+		$ret['chain'] = 'sixeleven';
 		$ret['config'] = isset($config[$ret['chain']]) ? $config[$ret['chain']] : array();
 	    }else{
 		$err[]=sprintf("%% wrong format of domain name %s%s", $domain,DEBUG ? sprintf(" (file: %s, function: %s, line: %s)",__FILE__,__FUNCTION__,__LINE__) : "");

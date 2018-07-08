@@ -1,5 +1,5 @@
 /*
-    ns4chain core functions :: https://github.com/subnetsRU/namecoin
+    ns4chain core functions :: https://github.com/subnetsRU/blockchain/tree/master/ns4chain
 
     (c) 2017-2018 SUBNETS.RU for bitname.ru project (Moscow, Russia)
     Authors: Nikolaev Dmitry <virus@subnets.ru>, Panfilov Alexey <lehis@subnets.ru>

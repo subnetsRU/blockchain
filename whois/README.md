@@ -1,10 +1,18 @@
-Whois service for [Namecoin](http://www.namecoin.org/) and [Emercoin](https://emercoin.com/)
+Whois service for blockchain domains
+=================
+[Namecoin](https://www.namecoin.org/) 
 
-Supported domains:
 * .bit
-* .coin
+
+[Emercoin](https://emercoin.com/)
+
 * .emc
+* .coin
 * .lib
 * .bazar
+
+[SixEleven](https://611project.org/) 
+
+* .611.to
 
 P.S. Created for [Bitname](http://www.bitname.ru/) project.

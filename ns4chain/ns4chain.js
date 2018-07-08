@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
-    ns4chain functions :: https://github.com/subnetsRU/namecoin
+    ns4chain functions :: https://github.com/subnetsRU/blockchain/tree/master/ns4chain
     
     (c) 2017-2018 SUBNETS.RU for bitname.ru project (Moscow, Russia)
     Authors: Nikolaev Dmitry <virus@subnets.ru>, Panfilov Alexey <lehis@subnets.ru>
@@ -215,6 +215,9 @@ ns4chain.request = function( obj ){
 		}
 	    };
 	    obj.ns4chainResponse = request.ns4chainResponse;
+	    if (obj.rpc == 'emercoin' && !sys.is_null(obj.subDomain)){
+		request.name = obj.subDomain + '.' + obj.name;
+	    }
 	    rpc.lookup( request );
     }
     catch(e){
@@ -244,8 +247,12 @@ ns4chain.rpcData = function( obj ){
 
     if (sys.is_null(res.errorCode)){
 	var fqdn = res.sld;
+	if (res.rpc == 'sixeleven'){
+	    fqdn += '.to';
+	    obj.res.domain += '.to';
+	}
 	var subDomain = null;
-	if (res.rpc == 'namecoin'){
+	if (res.rpc == 'namecoin' || res.rpc == 'sixeleven'){
 	    if (sys.IsJsonString(chainData.value) === true){
 		chainData.value = JSON.parse(chainData.value);
 		var tmpData = sys.cloneObj(chainData.value);
@@ -297,6 +304,9 @@ ns4chain.rpcData = function( obj ){
 	    //chainData.value = 'A=1.2.3.4|SD=www,gopher|NS=ns.example.com';
 	    //chainData.value = 'A=1.2.3.4|SD=www,gopher|TTL=4001|TXT=aaaaaaaaa|AAAA=2607:f8b0:4004:806::1001|CNAME=google.ru';
 	    //chainData.value = 'A=1.2.3.4|SD=www,gopher';
+	    if (!sys.is_null(res.subDomain)){
+		fqdn = res.domain;
+	    }
 	    zoneData[fqdn] = {};
 	    var regexp = /^~(\S)/gi;
 	    var match = regexp.exec(chainData.value);
@@ -388,12 +398,16 @@ ns4chain.findMap.emercoin = function( key, value ){
 	    }
 	}
     }
-    
+
     if (!sys.is_null(zoneData[key].sd) && !sys.is_null(zoneData[key].ns)){
 	zoneData[key].sd.forEach(function ( v ) {
 	    zoneData[v + '.' +key] = { ns: zoneData[key].ns };
 	});
+    }else{
+//TODO: RPC request for sublevel domain
+    
     }
+
     if (Object.keys(zoneData[key]).length > 0 && sys.is_null(zoneData[key].ttl)){
 	zoneData[key].ttl = config.ttl;
     }

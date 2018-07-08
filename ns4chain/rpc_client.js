@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
-    RPC client for ns4chain :: https://github.com/subnetsRU/namecoin
+    RPC client for ns4chain :: https://github.com/subnetsRU/blockchain/tree/master/ns4chain
 
     (c) 2017-2018 SUBNETS.RU for bitname.ru project (Moscow, Russia)
     Authors: Nikolaev Dmitry <virus@subnets.ru>, Panfilov Alexey <lehis@subnets.ru>
@@ -10,44 +10,62 @@ var jsonRPC = require('json-rpc2');
 var RPCconf = config.rpc;
 var namecoin = (!sys.is_null(RPCconf.namecoin) ? RPCconf.namecoin : {});
 var emercoin = (!sys.is_null(RPCconf.emercoin) ? RPCconf.emercoin : {});
+var sixeleven = (!sys.is_null(RPCconf.sixeleven) ? RPCconf.sixeleven : {});
 
 var namecoinRPC = null;
 var emercoinRPC = null;
+var sixelevenRPC = null;
 
 try {
-    if (sys.is_null(namecoin.host)){
-	throw new Error(sprintf('RPC namecoin host is unknown (file: %s, line: %s)',__file,__line));
-    }
-    if (sys.is_null(namecoin.port)){
-	throw new Error(sprintf('RPC namecoin port is unknown (file: %s, line: %s)',__file,__line));
-    }
-    if (sys.is_null(namecoin.user)){
-	throw new Error(sprintf('RPC namecoin user is unknown (file: %s, line: %s)',__file,__line));
-    }
-    if (sys.is_null(namecoin.pass)){
-	throw new Error(sprintf('RPC namecoin pass is unknown (file: %s, line: %s)',__file,__line));
-    }
     if (!sys.is_null(namecoin.enabled)){
+	if (sys.is_null(namecoin.host)){
+	    throw new Error(sprintf('RPC namecoin host is unknown (file: %s, line: %s)',__file,__line));
+	}
+	if (sys.is_null(namecoin.port)){
+	    throw new Error(sprintf('RPC namecoin port is unknown (file: %s, line: %s)',__file,__line));
+	}
+	if (sys.is_null(namecoin.user)){
+	    throw new Error(sprintf('RPC namecoin user is unknown (file: %s, line: %s)',__file,__line));
+	}
+	if (sys.is_null(namecoin.pass)){
+	    throw new Error(sprintf('RPC namecoin pass is unknown (file: %s, line: %s)',__file,__line));
+	}
 	namecoinRPC = jsonRPC.Client.$create(namecoin.port, namecoin.host, namecoin.user, namecoin.pass);
     }
 
-    if (sys.is_null(emercoin.host)){
-	throw new Error(sprintf('RPC emercoin host is unknown (file: %s, line: %s)',__file,__line));
-    }
-    if (sys.is_null(emercoin.port)){
-	throw new Error(sprintf('RPC emercoin port is unknown (file: %s, line: %s)',__file,__line));
-    }
-    if (sys.is_null(emercoin.user)){
-	throw new Error(sprintf('RPC emercoin user is unknown (file: %s, line: %s)',__file,__line));
-    }
-    if (sys.is_null(emercoin.pass)){
-	throw new Error(sprintf('RPC emercoin pass is unknown (file: %s, line: %s)',__file,__line));
-    }
     if (!sys.is_null(emercoin.enabled)){
+	if (sys.is_null(emercoin.host)){
+	    throw new Error(sprintf('RPC emercoin host is unknown (file: %s, line: %s)',__file,__line));
+	}
+	if (sys.is_null(emercoin.port)){
+	    throw new Error(sprintf('RPC emercoin port is unknown (file: %s, line: %s)',__file,__line));
+	}
+	if (sys.is_null(emercoin.user)){
+	    throw new Error(sprintf('RPC emercoin user is unknown (file: %s, line: %s)',__file,__line));
+	}
+	if (sys.is_null(emercoin.pass)){
+	    throw new Error(sprintf('RPC emercoin pass is unknown (file: %s, line: %s)',__file,__line));
+	}
 	emercoinRPC = jsonRPC.Client.$create(emercoin.port, emercoin.host, emercoin.user, emercoin.pass);
     }
+
+    if (!sys.is_null(sixeleven.enabled)){
+	if (sys.is_null(sixeleven.host)){
+	    throw new Error(sprintf('RPC sixeleven host is unknown (file: %s, line: %s)',__file,__line));
+	}
+	if (sys.is_null(sixeleven.port)){
+	    throw new Error(sprintf('RPC sixeleven port is unknown (file: %s, line: %s)',__file,__line));
+	}
+	if (sys.is_null(sixeleven.user)){
+	    throw new Error(sprintf('RPC sixeleven user is unknown (file: %s, line: %s)',__file,__line));
+	}
+	if (sys.is_null(sixeleven.pass)){
+	    throw new Error(sprintf('RPC sixeleven pass is unknown (file: %s, line: %s)',__file,__line));
+	}
+	sixelevenRPC = jsonRPC.Client.$create(sixeleven.port, sixeleven.host, sixeleven.user, sixeleven.pass);
+    }
     
-    if (sys.is_null(namecoin.enabled) && sys.is_null(emercoin.enabled)){
+    if (sys.is_null(namecoin.enabled) && sys.is_null(emercoin.enabled) && sys.is_null(sixeleven.enabled)){
 	throw new Error(sprintf('All RPC are disabled by configuration (file: %s, line: %s)',__file,__line));
     }
 }
@@ -90,6 +108,15 @@ rpc.lookup = function ( obj ){
 	    }else{
 		rpcClient = emercoinRPC;
 	    }
+	}else if (obj.rpc == 'sixeleven'){
+	    if (sys.is_null(sixelevenRPC) || sys.is_null(sixelevenRPC.call)){
+		res.error = sprintf('rpc.lookup: start of sixelevenRPC failed (file: %s, line: %s)',__file,__line);
+		res.errorCode = 'SERVFAIL';
+	    }else{
+		rpcClient = sixelevenRPC;
+	    }
+	}else{
+	    throw new Error(sprintf('rpcClient [%s] unknown (file: %s, line: %s)',obj.rpc,__file,__line));
 	}
     }
 
@@ -102,6 +129,8 @@ rpc.lookup = function ( obj ){
 		name = 'd/'+obj.name;
 	    }else if(obj.rpc == 'emercoin'){
 		name = sprintf('dns:%s.%s',obj.name,obj.zone);
+	    }else if (obj.rpc == 'sixeleven'){
+		name = 'd/'+obj.name;
 	    }
 	}
     }
@@ -116,7 +145,7 @@ rpc.lookup = function ( obj ){
 		res.error = sprintf('rpc.lookup (file: %s, line: %s): ',__file,__line,err);
 		var regexp = /^Error:\s"(\d+)"(.*)/gi;
 		match = regexp.exec(err);
-		if (!sys.is_null(match[2])){
+		if (!sys.is_null(match) && !sys.is_null(match[2])){
 		    try {
 			var e = JSON.parse(match[2]);
 			res.error =  sprintf('%s rpc.lookup: code %s: %s (file: %s, line: %s)',obj.rpc,e.error.code,e.error.message,__file,__line);
